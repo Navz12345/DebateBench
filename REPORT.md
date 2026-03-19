@@ -1,7 +1,7 @@
 # DebateBench: Can Structured Adversarial Debate Improve Scientific Fact Verification?
 
 **Course:** LLM & Agentic Systems — Graduate | **Assignment 2** | **Dr. Peyman Najafirad**
-**Dataset:** SciFact (Wadden et al., EMNLP 2020) | **N = 150 claims**
+**Dataset:** SciFact (Wadden et al., EMNLP 2020) | **N = 100 claims (final run)**
 **Framework:** LangGraph | **Models:** Qwen3-8B (debaters) + GPT-OSS-20B (judge + jury)
 
 **AI Tools Disclosure:** Claude (Anthropic) was used for architecture brainstorming, prompt iteration support, debugging assistance, and writing support. All final implementation decisions, experimental runs, results analysis, and conclusions were completed and verified by me on UTSA ARC infrastructure.
@@ -16,14 +16,14 @@ Scientific fact verification on SciFact: given a scientific claim and a set of e
 
 ### System Architecture
 
-DebateBench is a **LangGraph-based supervised multi-agent debate pipeline** with an optional three-juror panel. The system takes a claim and evidence snippets as input, runs two role-conditioned advocate agents through a structured adversarial debate, presents the full transcript to a judge for a single verdict, and optionally routes to a three-juror deliberation panel.
+DebateBench is a **LangGraph-based supervised multi-agent debate pipeline** with an optional three-juror panel (bonus). The system takes a claim and evidence snippets as input, runs two role-conditioned advocate agents through a structured adversarial debate, presents the full transcript to a judge for a single verdict, and optionally routes to a three-juror deliberation panel.
 
 **Agent roles:**
 
 - **Debater A (Advocate: SUPPORT)** — role-conditioned to build the strongest possible case that the evidence supports the claim. Framed as a lawyer, not a scientist, to remove the "intellectual honesty" conflict that caused empty reasoning fields in early iterations. Must cite specific evidence snippets by index and quote verbatim.
 - **Debater B (Advocate: REFUTE)** — role-conditioned to build the strongest possible case that the evidence does not support the claim. Focuses on scope mismatches, population qualifiers, and direct contradictions.
 - **Judge (GPT-OSS-20B)** — receives the full debate transcript and performs a five-step structured evaluation before producing a verdict: SUPPORT, REFUTE, or NOT_ENOUGH_INFO. Explicitly instructed to be equally willing to rule SUPPORT or REFUTE to counteract REFUTE bias. Produces per-debater strongest/weakest argument analysis.
-- **Jury Panel (3 jurors, GPT-OSS-20B)** — three role-specialized jurors that independently evaluate the debate before deliberating. Roles: Evidence Judge (citation accuracy), Logic Judge (reasoning quality), Calibration Judge (evidence sufficiency). Two-phase deliberation with smart aggregation and arbiter escalation.
+- **Jury Panel (Bonus — 3 jurors, GPT-OSS-20B)** — three role-specialized jurors that independently evaluate the debate before deliberating. Roles: Evidence Judge (citation accuracy), Logic Judge (reasoning quality), Calibration Judge (evidence sufficiency). Two-phase deliberation with smart aggregation and arbiter escalation.
 
 **Model strategy:** Both debaters use Qwen3-8B. Role diversity comes entirely from prompt design, not model heterogeneity — this isolates the debate structure's contribution. The judge and jury use GPT-OSS-20B, a larger model better suited to multi-turn argument evaluation without REFUTE bias.
 
@@ -61,7 +61,7 @@ load_case
 3. Conditional edges — consensus bypass, debate loop (min/max rounds + early stop), jury enable/disable
 4. Pure deterministic routing nodes — `consensus_check`, `early_stop_check`, `jury_check` are plain Python with no LLM calls
 
-### Smart Jury Logic
+### Smart Jury Logic (Bonus)
 
 The jury implements a five-step deliberation protocol:
 
@@ -105,46 +105,46 @@ All experiments run on SciFact (oracle retrieval — evidence abstracts pre-link
 **Four methods:**
 
 1. **LLM Debate (Single Judge)** — full pipeline, single GPT-OSS-20B judge
-2. **LLM Debate (Jury Panel)** — three-juror deliberation after single judge
+2. **LLM Debate (Jury Panel)** — bonus: three-juror deliberation after single judge
 3. **Direct QA (CoT)** — single Qwen3-8B call with chain-of-thought prompt, no debate
 4. **Self-Consistency (N=13)** — majority vote over 13 Qwen3-8B samples at temperature 0.9
 
 ### Results
 
-**Table 1: Overall Accuracy (n=150)**
+**Table 1: Overall Accuracy (n=100, final run)**
 
 | Method | Accuracy | N | LLM Calls / Claim |
 |---|---|---|---|
-| LLM Debate (Single Judge) | **53.3%** | 150 | ~13 avg |
-| LLM Debate (Jury Panel — 3 jurors) | 38.7% | 150 | ~34 avg |
-| Direct QA (CoT) | 56.7% | 150 | 1 |
-| Self-Consistency (N=13) | 56.7% | 150 | 13 |
+| LLM Debate (Single Judge) | **55.0%** | 100 | ~13 avg |
+| LLM Debate (Jury Panel v2) | 51.0% | 100 | ~34 avg |
+| Direct QA (CoT) | **61.0%** | 100 | 1 |
+| Self-Consistency (N=13) | 54.0% | 100 | 13 |
 
 **Table 2: Per-Label Accuracy**
 
 | Label | Single Judge | Jury Panel | N |
 |---|---|---|---|
-| SUPPORT | 33.3% | 33.3% | 54 |
-| REFUTE | 58.1% | **74.2%** | 31 |
-| NOT_ENOUGH_INFO | **67.7%** | 26.2% | 65 |
+| SUPPORT | 37.5% | 37.5% | 32 |
+| REFUTE | **66.7%** | **66.7%** | 21 |
+| NOT_ENOUGH_INFO | 61.7% | 53.2% | 47 |
 
-The jury improved REFUTE accuracy (+16pp) but collapsed NOT_ENOUGH_INFO accuracy (−41pp) due to systematic REFUTE bias in the Evidence and Logic jurors. This motivated the smart jury redesign with ambiguity safeguard.
+v1 jury (not shown) collapsed NOT_ENOUGH_INFO accuracy due to REFUTE bias and fell for the "Honesty Paradox" — jurors confusing weak advocacy with weak evidence. After the Devil's Advocate redesign (v2), jury accuracy improved from 38.7% to 51.0% (+12.3pp), and NOT_ENOUGH_INFO accuracy recovered to 53.2%.
 
 **Table 3: Judge Confidence Calibration**
 
 | Condition | Mean Confidence | Std |
 |---|---|---|
-| Correct predictions | 4.65 | 0.614 |
-| Incorrect predictions | 4.29 | 0.848 |
+| Correct predictions | 3.89 | 1.33 |
+| Incorrect predictions | 4.18 | 0.95 |
 
-The judge is slightly better calibrated on correct predictions (higher confidence when right) but the gap is small, suggesting overconfidence on wrong answers.
+The judge is **overconfident on wrong predictions** (4.18 vs 3.89 on correct). This is classic miscalibration — the model assigns higher confidence precisely when it is wrong, providing no reliable uncertainty signal.
 
 **Table 4: Accuracy by Debate Rounds**
 
 | Rounds | Accuracy | N |
 |---|---|---|
-| 0 (consensus bypass) | 67.7% | 65 |
-| 6 (full debate) | 42.4% | 85 |
+| 0 (consensus bypass) | 56.8% | 44 |
+| 6 (full debate) | 46.4% | 56 |
 
 Claims that needed debate were inherently harder — the debate structure could not overcome the difficulty of genuinely ambiguous evidence.
 
@@ -152,25 +152,27 @@ Claims that needed debate were inherently harder — the debate structure could 
 
 | Metric | Value |
 |---|---|
-| Jury / judge disagreement | 52/150 (35%) |
-| Jury better than judge | 9 cases |
-| Judge better than jury | 31 cases |
-| Consensus at Phase 1 | 33/150 (22%) |
-| Accuracy when unanimous at init | 66.7% |
-| Jurors who changed mind (Phase 2) | 0/450 (0%) |
-| Phase 1 mean confidence | 3.79 |
-| Phase 2 mean confidence | 3.97 (+0.18) |
+| Jury / judge disagreement | 22/100 (22%) |
+| Jury better than judge | 5 cases |
+| Judge better than jury | 9 cases |
+| Consensus at Phase 1 | 44/100 (44%) |
+| Accuracy when unanimous at init | 56.8% |
+| Jurors who changed mind (Phase 2) | 84/300 (28%) |
+| Phase 1 mean confidence | 4.11 |
+| Phase 2 mean confidence | 4.42 (+0.31) |
+| Ambiguity safeguard triggered | 30/100 (30%) — 73.3% accuracy |
 
 **Table 6: Statistical Significance (McNemar's Test, α=0.05)**
 
-| Comparison | χ² | p-value | Significant? |
-|---|---|---|---|
-| Jury vs Single Judge | 11.025 | < 0.05 | **YES** — jury significantly worse |
-| Debate vs Direct QA | 0.262 | > 0.05 | No |
-| Debate vs Self-Consistency | 0.254 | > 0.05 | No |
-| Jury vs Direct QA | 8.557 | < 0.05 | **YES** — jury significantly worse |
+| Comparison | χ² | p-value | n pairs | b (A wins) | c (B wins) | Significant? |
+|---|---|---|---|---|---|---|
+| Jury v1 vs Single Judge | 11.025 | < 0.05 | 150 | 31 | 9 | **YES** — v1 jury significantly worse |
+| Jury v2 vs Single Judge | 0.643 | > 0.05 | 100 | 9 | 5 | No — v2 jury competitive after fix |
+| Debate vs Direct QA | 0.625 | > 0.05 | 100 | — | — | No |
+| Debate vs Self-Consistency | 0.0 | > 0.05 | 100 | — | — | No |
+| Jury vs Direct QA | 8.557 | < 0.05 | 150 | — | — | **YES** — jury significantly worse |
 
-McNemar's test applied to paired outputs (same 150 claims). Debate vs Direct QA not significant — the debate pipeline did not significantly outperform a single direct call.
+McNemar's test applied to paired outputs (same 100 claims). ID-aware pairing used — claims matched by `case_id` so index-shift errors from any dropped rows are prevented. Edwards' continuity correction applied throughout. For jury vs judge: b=31 means the single judge was correct where the jury was wrong 31 times; c=9 means the jury was correct where the judge was wrong 9 times. Debate vs Direct QA not significant — the debate pipeline did not significantly outperform a single direct call.
 
 ### Figures
 
@@ -253,6 +255,29 @@ Debater B argued REFUTE convincingly. The judge gave REFUTE conf=5 and all three
 
 ---
 
+
+### The Honesty Paradox and the Devil's Advocate Fix
+
+An early jury redesign attempted to make the Calibration Juror more sensitive to uncertainty. The instruction: *"if a debater shows low confidence, flag the case as NOT_ENOUGH_INFO."*
+
+This backfired. On claims where Debater A argued weakly (conf=3), jurors would interpret that weakness as insufficient evidence and switch to NOT_ENOUGH_INFO — even when Debater B had correctly cited a refuting snippet at conf=5. The jurors confused **advocacy quality** with **evidence quality**. A weak SUPPORT advocate does not mean the evidence is ambiguous; it means Debater A is a bad lawyer.
+
+This is the **Honesty Paradox**: making agents more sensitive to uncertainty produced a system that evaluated debater performance instead of snippet content.
+
+**The fix:** The Calibration Juror was redesigned as a **Devil's Advocate** with three explicit rules:
+
+1. **SILENCE IS NOT CONSENT** — low debater confidence is a signal to re-read snippets directly, not to default to NOT_ENOUGH_INFO
+2. **VERIFICATION ONLY** — plausible logic without a direct snippet quote is rejected
+3. **THE HIDDEN ASSUMPTION TEST** — before finalizing, identify what the majority verdict assumes but no snippet actually confirms
+
+Result: jury accuracy improved from **38.7% (v1) to 51.0% (v2)** (+12.3pp), and the McNemar test flipped from significantly worse than the judge (p<0.05) to not significantly different (p>0.05).
+
+### Epistemic Status and Concession Mechanisms
+
+Two additional improvements to debater honesty were implemented. The `epistemic_status` field (CERTAIN / LEANING / DOUBTFUL / CONCEDED) was added to debater outputs and placed first in the JSON format to force evaluation before argument generation. A `[CONCEDE]` sentinel token was added to allow immediate early stopping when a debater genuinely cannot rebut a snippet.
+
+In practice, `epistemic_status=LEANING` appeared consistently on weak cases (conf=3-4), confirming the model uses the scale correctly. However, `CONCEDED` never appeared across 100 claims — Qwen3-8B's thinking mode always generates *some* argument, and instruction-tuned models are trained against admitting defeat. Early stopping fired on 0/100 cases. This is an honest negative result: prompt engineering alone cannot override a model's trained disposition to find arguments.
+
 ### Connection to Theoretical Predictions
 
 Irving et al. (2018) proposed that adversarial debate between AI agents could help a less-capable judge identify truth by forcing both sides to surface and rebut each other's arguments.
@@ -319,30 +344,33 @@ Revised (NEI-focused): Forces two-stage structure — first answer "Is evidence 
 ## Appendix: Full Prompt Templates
 
 <details>
-<summary><strong>Debater A — Final v3 (Lawyer framing)</strong></summary>
+<summary><strong>Debater A — Final v4 (Epistemic honesty + concession)</strong></summary>
 
 ```
-You are arguing the SUPPORT side of a scientific fact-verification debate.
-Your job: build the strongest possible case that the evidence supports the claim.
-Think of yourself as a lawyer — find the best reading of the evidence for your side.
-
-Respond with ONLY valid JSON. No preamble, no explanation, no markdown fences.
+You are Debater A in a scientific fact-verification debate.
+Your assigned opening position is SUPPORT. Your PRIMARY DUTY is to the evidence.
 
 Required format:
-{"stance": "SUPPORT", "reasoning": "your argument here",
- "evidence_used": [0, 1], "counter_to_opponent": "your rebuttal", "confidence": 4}
+{"epistemic_status": "CERTAIN", "stance": "SUPPORT", "reasoning": "...",
+ "evidence_used": [0, 1], "counter_to_opponent": "...", "confidence": 4}
 
-CLAIM: {CLAIM}
-EVIDENCE: {EVIDENCE}
-DEBATE SO FAR: {TRANSCRIPT}
+STEP 1 — Set epistemic_status HONESTLY (first, before writing anything else):
+  CERTAIN   = snippet directly confirms your stance word for word
+  LEANING   = evidence leans your way but has gaps
+  DOUBTFUL  = opponent cited snippet you struggled to counter
+  CONCEDED  = opponent's evidence defeats your position
+
+STEP 2 — Set confidence based on evidence quality, NOT advocacy strength:
+  5 = snippet confirms claim unambiguously  |  1 = arguing from absence of contradiction
+
+STEP 3 — Write reasoning. Quote key phrases verbatim. Acknowledge one valid opponent
+  point before your main argument. counter_to_opponent: rebut specific snippet citation.
+
+Concession rule: If CONCEDED, change stance to correct verdict, begin reasoning with
+[CONCEDE] followed by the exact snippet phrase that defeated you.
+
+CLAIM: {CLAIM} | EVIDENCE: {EVIDENCE} | DEBATE SO FAR: {TRANSCRIPT}
 OPPONENT'S LAST ARGUMENT: {OPPONENT_LAST}
-
-- "stance" must be "SUPPORT" — always.
-- "reasoning": write at least 3 steps. Quote key phrases verbatim in single quotes.
-- "counter_to_opponent": rebut opponent's last argument with evidence.
-- "confidence": 1=weak support, 5=snippet directly confirms claim.
-IMPORTANT: You must always write non-empty reasoning. That is your role.
-Output only the JSON object starting with { and ending with }.
 ```
 </details>
 
@@ -350,27 +378,24 @@ Output only the JSON object starting with { and ending with }.
 <summary><strong>Debater B — Final v3 (Lawyer framing)</strong></summary>
 
 ```
-You are arguing the REFUTE side of a scientific fact-verification debate.
-Your job: build the strongest possible case that the evidence does NOT support the claim.
-Think of yourself as a lawyer — find the flaws, mismatches, and contradictions.
-
-Respond with ONLY valid JSON. No preamble, no explanation, no markdown fences.
+You are Debater B in a scientific fact-verification debate.
+Your assigned opening position is REFUTE. Your PRIMARY DUTY is to the evidence.
 
 Required format:
-{"stance": "REFUTE", "reasoning": "your argument here",
- "evidence_used": [0, 2], "counter_to_opponent": "your rebuttal", "confidence": 4}
+{"epistemic_status": "CERTAIN", "stance": "REFUTE", "reasoning": "...",
+ "evidence_used": [0, 2], "counter_to_opponent": "...", "confidence": 4}
 
-CLAIM: {CLAIM}
-EVIDENCE: {EVIDENCE}
-DEBATE SO FAR: {TRANSCRIPT}
+STEP 1 — Set epistemic_status HONESTLY: CERTAIN / LEANING / DOUBTFUL / CONCEDED
+STEP 2 — Set confidence based on evidence quality (5=snippet directly contradicts; 1=tangential)
+         WARNING: conf=5 on every claim signals you are not evaluating evidence.
+STEP 3 — Focus on scope, magnitude, population, or direct contradiction. Quote verbatim.
+         Acknowledge one valid opponent point before rebutting.
+
+Concession rule: If epistemic_status=CONCEDED, change stance and begin reasoning with [CONCEDE]
+followed by the exact snippet phrase that forced the concession.
+
+CLAIM: {CLAIM} | EVIDENCE: {EVIDENCE} | DEBATE SO FAR: {TRANSCRIPT}
 OPPONENT'S LAST ARGUMENT: {OPPONENT_LAST}
-
-- "stance" must be "REFUTE" — always.
-- Focus on: scope, magnitude, population, or direct contradiction.
-- Quote key phrases verbatim. Show the specific mismatch.
-- "confidence": 1=indirect refutation, 5=snippet directly contradicts claim.
-IMPORTANT: You must always write non-empty reasoning. That is your role.
-Output only the JSON object starting with { and ending with }.
 ```
 </details>
 
@@ -464,29 +489,28 @@ Output only the JSON object starting with { and ending with }.
 </details>
 
 <details>
-<summary><strong>Calibration Judge Juror</strong></summary>
+<summary><strong>Calibration Judge — Devil's Advocate (v2)</strong></summary>
 
 ```
-You are the Calibration Judge on a three-person jury.
-Your role: verify the verdict is proportionate to the evidence strength.
-NOT_ENOUGH_INFO is a last resort, not a default.
+You are the Lead Dissenter and Devil's Advocate on a three-person jury.
+Your success is measured by stress-testing arguments — NOT by reaching consensus.
+You evaluate EVIDENCE SNIPPETS directly. Debater performance is irrelevant.
 
-SCORING RUBRIC:
-  5 — Snippet directly and explicitly resolves the claim word-for-word.
-  4 — Snippet strongly supports or contradicts with minor inference.
-  3 — Snippet partially addresses the claim.
-  2 — Snippet is tangential but loosely relevant.
-  1 — Snippet does not address the claim at all.
+THREE CORE RULES:
+1. SILENCE IS NOT CONSENT — low debater confidence means check snippets directly, NOT default to NEI
+2. VERIFICATION ONLY — plausible logic without a direct snippet quote gets rejected
+3. HIDDEN ASSUMPTION TEST — identify what majority verdict assumes but no snippet confirms
 
-{"verdict": "REFUTE", "confidence": 4, "reasoning": "...",
+VERDICT RULES:
+  SUPPORT / REFUTE — use even if advocate argued it poorly, if snippet supports it
+  NOT_ENOUGH_INFO  — ONLY if zero snippets address the claim topic at all
+
+Put Dissension Analysis INSIDE the reasoning field:
+{"verdict": "REFUTE", "confidence": 4,
+ "reasoning": "DISSENSION ANALYSIS: [weakest majority assumption + snippet challenge]. MY VERDICT: [conclusion].",
  "strongest_arg_support": "...", "strongest_arg_refute": "...", "evidence_alignment": 4}
 
-CLAIM: {CLAIM}
-EVIDENCE SNIPPETS: {EVIDENCE}
-FULL DEBATE TRANSCRIPT: {TRANSCRIPT}
-
-Use NOT_ENOUGH_INFO only if zero snippets address the claim at all.
-Output only the JSON object starting with { and ending with }.
+CLAIM: {CLAIM} | EVIDENCE SNIPPETS: {EVIDENCE} | FULL DEBATE TRANSCRIPT: {TRANSCRIPT}
 ```
 </details>
 

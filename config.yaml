@@ -25,8 +25,8 @@ models:
   jury_model:
     # GPT-OSS-20B — single judge verdict after debate.
     name:        "openai/gpt-oss-20b"
-    api_key:     "utsa-08GdYYyq2lzmWc02fhfMSKzv3ACPwYgq6U02BozaaupZym1wGQzJBNC59dV4wFTi"
-    base_url:    "http://10.100.1.212:8888/v1"
+    api_key:     ""
+    base_url:    ""
     temperature: 0.5
     max_tokens:  4096
     timeout:     180

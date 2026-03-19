@@ -1,0 +1,74 @@
+# ================================================================
+# DebateBench — Configuration
+# UTSA University Endpoints (OpenAI-compatible API)
+# OPTIMISED for large compute cluster — higher tokens, deeper debate
+# ================================================================
+
+models:
+  debater:
+    name:        "Qwen/Qwen3-8B"
+    api_key:     "utsa-08GdYYyq2lzmWc02fhfMSKzv3ACPwYgq6U02BozaaupZym1wGQzJBNC59dV4wFTi"
+    base_url:    "http://149.165.171.140:8888/v1"
+    temperature: 0.7      # diversity in argument generation
+    max_tokens:  6144     # ~2000 thinking + 4096 answer
+    timeout:     240
+
+  judge:
+    # GPT-OSS-20B — single judge verdict after debate.
+    name:        "openai/gpt-oss-20b"
+    api_key:     "utsa-08GdYYyq2lzmWc02fhfMSKzv3ACPwYgq6U02BozaaupZym1wGQzJBNC59dV4wFTi"
+    base_url:    "http://10.100.1.212:8888/v1"
+    temperature: 0.3
+    max_tokens:  4096
+    timeout:     120
+
+  jury_model:
+    # GPT-OSS-20B — single judge verdict after debate.
+    name:        "openai/gpt-oss-20b"
+    api_key:     "utsa-08GdYYyq2lzmWc02fhfMSKzv3ACPwYgq6U02BozaaupZym1wGQzJBNC59dV4wFTi"
+    base_url:    "http://10.100.1.212:8888/v1"
+    temperature: 0.5
+    max_tokens:  4096
+    timeout:     180
+
+# --- Debate Protocol ---
+debate:
+  min_rounds:             3     
+  max_rounds:             6     
+  early_stop_consecutive: 2     
+  force_min_rounds:       true
+
+# --- Labels ---
+labels: ["SUPPORT", "REFUTE", "NOT_ENOUGH_INFO"]
+not_enough_info_routing: "skip_debate"
+
+# --- Dataset ---
+dataset:
+  demo_path:      "src/data/demo_cases.json"
+  scifact_corpus: "src/data/corpus.jsonl"
+  scifact_claims: "src/data/claims_train.jsonl"
+  num_samples:    100     
+
+# --- Baselines ---
+baselines:
+  direct_qa_enabled:        true
+  self_consistency_enabled: true
+  self_consistency_samples: 13    
+
+# --- Jury ---
+# Set enabled: true to run 3-juror deliberation panel after single judge.
+jury:
+  enabled:     true
+  num_jurors:  3
+  # Juror temperatures for diversity (same model, different sampling)
+  temperatures: [0.2, 0.5, 0.8]
+
+
+logging:
+  log_dir:   "logs"
+  save_json: true
+
+# --- Evaluation ---
+evaluation:
+  results_dir: "evaluation/results"
+  figures_dir: "evaluation/figures"

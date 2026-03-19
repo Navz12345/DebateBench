@@ -1,0 +1,68 @@
+You are a juror deliberating after a split Phase 1 vote where at least one juror chose NOT_ENOUGH_INFO.
+
+CRITICAL: You are evaluating the EVIDENCE SNIPPETS, not the debaters' performance.
+A weak or silent debater does NOT mean the evidence is insufficient.
+A confident debater does NOT mean the evidence supports them.
+
+You MUST respond with ONLY a JSON object. No preamble, no markdown.
+
+Required format:
+{{"evidence_sufficient": "YES", "verdict": "REFUTE", "confidence": 4, "reasoning": "your reasoning", "self_reflection": "weakness in my Phase 1 reasoning", "strongest_arg_support": "best support arg from snippets", "strongest_arg_refute": "best refute arg from snippets", "evidence_alignment": 4}}
+
+---
+CLAIM: {CLAIM}
+
+EVIDENCE SNIPPETS:
+{EVIDENCE}
+
+FULL DEBATE TRANSCRIPT:
+{TRANSCRIPT}
+
+---
+ALL JURORS' PHASE 1 ASSESSMENTS:
+{PHASE1_VOTES}
+
+YOUR PHASE 1 VERDICT: {MY_PHASE1_VERDICT}
+YOUR PHASE 1 REASONING: {MY_PHASE1_REASONING}
+
+---
+STEP 1 — The "Devil's Advocate" Test (do this BEFORE reading Phase 1 votes)
+Re-read each snippet INDEPENDENTLY. Ask for each:
+  "Does this snippet directly address whether the claim is true or false?"
+  Score: 5=directly resolves, 4=strongly relevant, 3=partial, 2=tangential, 1=irrelevant
+
+STEP 2 — The "Why Not?" Challenge
+Before answering evidence_sufficient, ask yourself:
+  "What specific data would I need to change my verdict?
+   Is that data ABSENT from the snippets, or is it PRESENT but contested?"
+
+  If the data is ABSENT → the snippets may genuinely be insufficient (consider NEI)
+  If the data is PRESENT but one debater argued it poorly → evidence IS sufficient (SUPPORT or REFUTE)
+
+  TRAP TO AVOID: "I feel uncertain" ≠ "evidence is insufficient"
+  TRAP TO AVOID: "The SUPPORT debater was weak" ≠ "the claim lacks support in the snippets"
+  TRAP TO AVOID: Switching from REFUTE to NEI because deliberation feels unclear
+
+STEP 3 — Answer evidence_sufficient with a strict test:
+  "YES" — at least one snippet scores 3+ and directly addresses the claim topic
+  "NO"  — ALL snippets score 1-2 and none are about the claim topic at all
+
+  "NO" is reserved for cases where the snippets discuss a completely different subject.
+  If a snippet discusses the same topic as the claim but reaches a different conclusion,
+  that is REFUTE — not NOT_ENOUGH_INFO.
+
+STEP 4 — Based on your answer:
+  If "NO"  → verdict MUST be "NOT_ENOUGH_INFO"
+  If "YES" → choose "SUPPORT" or "REFUTE" based on what the snippets say directly,
+              NOT based on which debater argued more persuasively or had higher confidence.
+
+STEP 5 — self_reflection: what was the single biggest flaw in your Phase 1 reasoning?
+  Specifically ask: "Did I confuse a weak advocate with weak evidence?"
+  If the answer is YES — correct your verdict to match the evidence, not the advocacy.
+
+STEP 6 — Final check before writing your verdict:
+  If you are switching from REFUTE→NEI or SUPPORT→NEI, you MUST quote the specific
+  snippet that is insufficient and explain why it scores 1-2 rather than 3+.
+  Switching to NEI without a specific snippet justification is not permitted.
+
+Output only the JSON object starting with {{ and ending with }}.

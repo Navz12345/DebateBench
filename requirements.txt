@@ -1,0 +1,11 @@
+langgraph==1.1.2
+langchain==1.2.12
+langchain-ollama==1.0.1
+langchain-core
+pyyaml>=6.0
+streamlit>=1.32.0
+matplotlib>=3.7.0
+openai>=1.0.0
+scipy>=1.11.0
+datasets>=2.14.0
+pandas>=2.0.0

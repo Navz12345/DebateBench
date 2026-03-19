@@ -1,0 +1,90 @@
+[
+  {
+    "id": "demo_001",
+    "claim": "Vitamin C supplementation prevents the common cold in the general population.",
+    "evidence_snippets": [
+      "Meta-analyses found no significant reduction in common cold incidence in the general population with regular vitamin C supplementation.",
+      "Some studies reported a modest reduction in cold duration (approximately 8%), but not prevention.",
+      "A stronger protective effect was observed mainly in people under extreme physical stress such as marathon runners."
+    ],
+    "label": "REFUTE",
+    "source": "manual_demo"
+  },
+  {
+    "id": "demo_002",
+    "claim": "Regular exercise has antidepressant effects comparable to medication in mild to moderate depression.",
+    "evidence_snippets": [
+      "A meta-analysis of 25 RCTs showed exercise produced a large effect size (d=0.82) on depressive symptoms.",
+      "The effect of exercise was comparable to antidepressant medication in patients with mild to moderate depression.",
+      "Both aerobic and resistance training demonstrated similar antidepressant effects in clinical populations."
+    ],
+    "label": "SUPPORT",
+    "source": "manual_demo"
+  },
+  {
+    "id": "demo_003",
+    "claim": "Caffeine doses above 6 mg/kg provide greater endurance performance benefits than lower doses.",
+    "evidence_snippets": [
+      "Caffeine at 3-6 mg/kg body mass significantly improves endurance performance.",
+      "Higher doses above 6 mg/kg do not provide additional performance benefits and increase adverse effects.",
+      "Performance improvements of 2-4% are consistently observed with moderate caffeine doses in trained athletes."
+    ],
+    "label": "REFUTE",
+    "source": "manual_demo"
+  },
+  {
+    "id": "demo_004",
+    "claim": "Mindfulness meditation produces large effect sizes for chronic pain reduction.",
+    "evidence_snippets": [
+      "MBSR programs produce clinically significant reductions in chronic pain intensity.",
+      "The effect size for pain reduction is modest (d=0.33) but comparable to other behavioral interventions.",
+      "Benefits of MBSR persist at 6-month follow-up, suggesting durable changes in pain processing."
+    ],
+    "label": "REFUTE",
+    "source": "manual_demo"
+  },
+  {
+    "id": "demo_005",
+    "claim": "Mediterranean diet reduces major cardiovascular events by approximately 30%.",
+    "evidence_snippets": [
+      "The PREDIMED randomized trial showed a 30% reduction in major cardiovascular events with Mediterranean diet supplemented with olive oil.",
+      "The protective effect was observed for both fatal and non-fatal myocardial infarction and stroke.",
+      "The cardioprotective effect was independent of caloric intake and body weight changes."
+    ],
+    "label": "SUPPORT",
+    "source": "manual_demo"
+  },
+  {
+    "id": "demo_006",
+    "claim": "Aspirin prevents colorectal cancer after only one year of use.",
+    "evidence_snippets": [
+      "Regular aspirin use is associated with a significant reduction in colorectal cancer risk.",
+      "The protective effect requires long-term use of at least 5 years and doses of 75-325 mg per day.",
+      "Meta-analysis showed a 27% reduction in colorectal cancer risk with regular aspirin use."
+    ],
+    "label": "REFUTE",
+    "source": "manual_demo"
+  },
+  {
+    "id": "demo_007",
+    "claim": "The relationship between screen time and childhood obesity has not been established.",
+    "evidence_snippets": [
+      "Higher daily screen time is positively associated with increased BMI in children aged 5-11.",
+      "Each additional hour of television viewing was associated with a 0.07 kg/m2 increase in BMI.",
+      "Randomized interventions reducing screen time produced modest but significant reductions in BMI z-scores."
+    ],
+    "label": "REFUTE",
+    "source": "manual_demo"
+  },
+  {
+    "id": "demo_008",
+    "claim": "Sugar-sweetened beverage consumption is independently associated with increased risk of type 2 diabetes.",
+    "evidence_snippets": [
+      "Each additional serving per day of sugar-sweetened beverages was associated with a 26% greater risk of type 2 diabetes.",
+      "The association persists after adjustment for total energy intake, BMI, and dietary quality.",
+      "Replacing one serving per day of sugar-sweetened beverage with water was associated with a 7-10% lower risk."
+    ],
+    "label": "SUPPORT",
+    "source": "manual_demo"
+  }
+]

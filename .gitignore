@@ -1,0 +1,11 @@
+﻿.venv/
+__pycache__/
+*.pyc
+*.pyo
+logs/
+evaluation/results/
+evaluation/figures/
+*.egg-info/
+.env
+experiment.log
+experiment_err.log

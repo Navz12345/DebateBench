@@ -7,8 +7,8 @@
 models:
   debater:
     name:        "Qwen/Qwen3-8B"
-    api_key:     "utsa-08GdYYyq2lzmWc02fhfMSKzv3ACPwYgq6U02BozaaupZym1wGQzJBNC59dV4wFTi"
-    base_url:    "http://149.165.171.140:8888/v1"
+    api_key:     ""
+    base_url:    ""
     temperature: 0.7      # diversity in argument generation
     max_tokens:  6144     # ~2000 thinking + 4096 answer
     timeout:     240
@@ -16,8 +16,8 @@ models:
   judge:
     # GPT-OSS-20B — single judge verdict after debate.
     name:        "openai/gpt-oss-20b"
-    api_key:     "utsa-08GdYYyq2lzmWc02fhfMSKzv3ACPwYgq6U02BozaaupZym1wGQzJBNC59dV4wFTi"
-    base_url:    "http://10.100.1.212:8888/v1"
+    api_key:     ""
+    base_url:    ""
     temperature: 0.3
     max_tokens:  4096
     timeout:     120
